@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of INSPIRE.
-# Copyright (C) 2014-2017 CERN.
+# Copyright (C) 2014-2019 CERN.
 #
 # INSPIRE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -24,8 +24,15 @@
 
 from __future__ import absolute_import, division, print_function
 
+ES_HOSTNAME = "localhost:9200"
+ES_MAX_QUERY_SIZE = 999
+REDIS_URL = "redis://localhost:6379/0"
+ETHNICITY_MODEL_PATH = "/home/pazembrz/dev/clustering/ethnicity_estimator.pickle"
+DISTANCE_MODEL_PATH = "/home/pazembrz/dev/clustering/linkage.dat"
+SAMPLED_PAIRS_SIZE = 12 * 50000
+DISPLAY_PROGRESS = True
+LOG_LEVEL = "INFO"
 
-DISAMBIGUATION_SAMPLED_PAIRS_SIZE = 12 * 100000
 """The number of signature pairs we use during training.
 
 Since INSPIRE has ~3M curated signatures it would take too much time

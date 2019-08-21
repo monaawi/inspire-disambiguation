@@ -20,32 +20,4 @@
 # granted to it by virtue of its status as an Intergovernmental Organization
 # or submit itself to any jurisdiction.
 
-"""Disambiguation utils."""
-
 from __future__ import absolute_import, division, print_function
-
-import os
-from contextlib import contextmanager
-
-
-@contextmanager
-def open_file_in_folder(filename, mode="r", buffering=-1):
-    """Open a file in a folder, creating the folder if it does not exist.
-
-    Args:
-        filename (str): Path to open
-        mode (str): Mode in which file will be opened.
-        buffering (int): Buffering option passed to `open` function.
-
-    Returns:
-        file object: File descriptor to opened file.
-
-    """
-    try:
-        os.makedirs(os.path.dirname(filename))
-    except OSError:
-        if not os.path.isdir(os.path.dirname(filename)):
-            raise
-
-    with open(filename, mode, buffering) as fd:
-        yield fd
