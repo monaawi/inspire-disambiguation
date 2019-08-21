@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
 # This file is part of INSPIRE.
-# Copyright (C) 2014-2017 CERN.
+# Copyright (C) 2014-2019 CERN.
 #
 # INSPIRE is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -20,6 +20,29 @@
 # granted to it by virtue of its status as an Intergovernmental Organization
 # or submit itself to any jurisdiction.
 
-"""Disambiguation core DB."""
+"""Disambiguation helpers."""
+from inspire_utils.helpers import maybe_int
+from inspire_utils.record import get_value
 
-from __future__ import absolute_import, division, print_function
+
+def _get_author_affiliation(author):
+    return get_value(author, "affiliations.value[0]", default="")
+
+
+def _get_author_id(author):
+    if author.get("curated_relation"):
+        return get_recid_from_ref(author.get("record"))
+
+
+def get_recid_from_ref(ref_obj):
+    """Retrieve recid from jsonref reference object.
+    If no recid can be parsed, returns None.
+    """
+    if not isinstance(ref_obj, dict):
+        return None
+    url = ref_obj.get("$ref", "")
+    return maybe_int(url.split("/")[-1])
+
+
+def _get_authors(record):
+    return get_value(record, "authors.full_name", default=[])
