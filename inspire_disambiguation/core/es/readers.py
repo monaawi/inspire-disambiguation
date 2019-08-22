@@ -24,22 +24,14 @@
 
 from __future__ import absolute_import, division, print_function
 
+from collections import defaultdict
+
 import six
 from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.connections import connections
 
 from inspire_disambiguation import conf
-from inspire_disambiguation.core.helpers import _build_signature, _build_publication
-
-SIGNATURE_FIELDS = [
-    'authors.affiliations.value',
-    'authors.curated_relation',
-    'authors.full_name',
-    'authors.record',
-    'authors.signature_block',
-    'authors.uuid',
-    'control_number',
-]
+from inspire_disambiguation.core.helpers import _build_signature
 
 
 class LiteratureSearch(Search):
@@ -56,56 +48,81 @@ class LiteratureSearch(Search):
         )
 
 
-def build_literature_query(signature_block=None, only_curated=False):
-    query = Q()# Q('match', _collections="Literature")
+def get_lit_records_query(signature_block=None, only_curated=False):
+    SIGNATURE_FIELDS = [
+        'abstracts.value',
+        'affiliations.value',
+        'authors.affiliations.value',
+        'authors.curated_relation',
+        'authors.full_name',
+        'authors.record',
+        'authors.signature_block',
+        'authors.uuid',
+        'control_number',
+        'collaborations.value',
+        'keywords.value',
+        'titles.title',
+        'inspire_categories.term',
+    ]
+    literature_query = Q('match', _collections="Literature")
+    query_authors_helper = Q()
     if only_curated:
-        query += Q('term', authors__curated_relation=True)
+        query_authors_helper += Q('term', authors__curated_relation=True)
     if signature_block:
-        query += Q('term', authors__signature_block__raw=signature_block)
-    res = LiteratureSearch().query(
-        'nested',
-        path='authors',
-        query=query
+        query_authors_helper += Q('term', authors__signature_block__raw=signature_block)
+    authors_query = Q('nested', path='authors', query=query_authors_helper)
+    query = LiteratureSearch().query(
+        Q('bool', must=[literature_query, authors_query])
     ).params(
-        size=conf.get('ES_MAX_QUERY_SIZE', 999)
+        size=conf.get('ES_MAX_QUERY_SIZE', 9999),
+        _source=SIGNATURE_FIELDS
     )
-    return res
+    return query
 
 
-def query_for_signatures(signature_block=None, only_curated=False):
+def get_signatures(signature_block=None, only_curated=False):
     """Get all signatures from the ES which are maching specified signature_block.
 
     Yields:
         dict: a signature which is matching signature_block.
 
     """
-    res = build_literature_query(signature_block, only_curated)
-    for record in res.scan():
+    query = get_lit_records_query(signature_block, only_curated)
+    results = []
+    for record in query.scan():
         record = record.to_dict()
-        publication_id = record.get('control_number')
         for author in record.get('authors'):
-            if only_curated and not author.get('curated_relation'):
+            if only_curated and (
+                not author.get('curated_relation') or not author.get('author_id')
+            ):
                 continue
             if signature_block and author.get('signature_block') != signature_block:
                 continue
-            yield _build_signature(author, record)
+            results.append(_build_signature(author, record))
+    return results
 
 
-def get_signatures(signature_block=None):
-    return [sig for sig in query_for_signatures(signature_block)]
+def get_input_clusters(signatures):
+    input_clusters = []
+    signatures_with_author = defaultdict(list)
+    signatures_without_author = []
+    for signature in signatures:
+        if signature.get('author_id', None):
+            signatures_with_author[signature['author_id']].append(
+                signature['signature_uuid'])
+        else:
+            signatures_without_author.append(signature['signature_uuid'])
 
-
-def get_curated_signatures():
-    return [sig for sig in query_for_signatures(only_curated=True) if sig.get('author_id', None)]
-
-
-def get_clusters(signatures):
-    input_cluster = []
-    for cluster_id, signature in enumerate(signatures):
-
-        input_cluster.append({
-            'author_id': signature.get('author_id', None),
+    for cluster_id, (author_id, signature_uuids) in enumerate(six.iteritems(signatures_with_author)):
+        input_clusters.append({
+            'author_id': author_id,
             'cluster_id': cluster_id,
-            'signature_uuids': [signature['signature_uuid'],]
+            'signature_uuids': signature_uuids,
         })
-    return input_cluster
+    for cluster_id, signature_uuid in enumerate(signatures_without_author, cluster_id + 1):
+        input_clusters.append({
+            'author_id': None,
+            'cluster_id': cluster_id,
+            'signature_uuids': [signature_uuid],
+        })
+    return input_clusters

@@ -24,36 +24,38 @@
 
 from __future__ import absolute_import, division, print_function
 
-from collections import defaultdict
-
-import six
-
+import numpy
 from inspire_disambiguation import conf
-from .core.es.readers import (
-    get_signatures,
-)
+from inspire_disambiguation.core.es.readers import get_signatures, get_input_clusters
+from inspire_disambiguation.core.ml.sampling import sample_signature_pairs
 from .core.ml.models import (
     Clusterer,
     DistanceEstimator,
     EthnicityEstimator,
 )
-from .core.ml.sampling import sample_signature_pairs_in_memory
 
 
-def train_and_save_ethnicity_model():
+def train_and_save_ethnicity_model(load_data_path, save_model_path):
     """Train the ethnicity estimator model and save it to disk."""
     estimator = EthnicityEstimator()
-    estimator.load_data(conf['DISAMBIGUATION_ETHNICITY_DATA_PATH'])
+    estimator.load_data(load_data_path)
     estimator.fit()
-    estimator.save_model(conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'])
+    estimator.save_model(save_model_path)
 
 
-def train_and_save_distance_model(curated_signatures, pairs, sampled_pairs_size=None):
+def train_and_save_distance_model(
+    load_ethnicity_path,
+    save_distance_model_path,
+    sampled_pairs_size,
+):
     """Train the distance estimator model and save it to disk."""
-    if not sampled_pairs_size:
-        sampled_pairs_size = conf['DISAMBIGUATION_SAMPLED_PAIRS_SIZE']
+    curated_signatures = get_signatures(curated_only=True)
+    input_clusters = get_input_clusters(curated_signatures)
+    pairs = [pair for pair in sample_signature_pairs(
+        curated_signatures, input_clusters, sampled_pairs_size
+    )]
     ethnicity_estimator = EthnicityEstimator()
-    ethnicity_estimator.load_model(conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'])
+    ethnicity_estimator.load_model(load_ethnicity_path)
 
     distance_estimator = DistanceEstimator(ethnicity_estimator)
     distance_estimator.load_data(
@@ -62,11 +64,11 @@ def train_and_save_distance_model(curated_signatures, pairs, sampled_pairs_size=
         sampled_pairs_size
     )
     distance_estimator.fit()
-    distance_estimator.save_model(conf['DISAMBIGUATION_DISTANCE_MODEL_PATH'])
+    distance_estimator.save_model(save_distance_model_path)
 
 
-def train_clustering_model(signatures, input_clusters):
-    """Train the clustering model and save it to disk."""
+def cluster(signatures, input_clusters):
+    """Train the clustering model and get output."""
     ethnicity_estimator = EthnicityEstimator()
     ethnicity_estimator.load_model(conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'])
 
@@ -79,5 +81,23 @@ def train_clustering_model(signatures, input_clusters):
         input_clusters,
     )
     clusterer.fit(n_jobs=conf['DISAMBIGUATION_CLUSTERING_N_JOBS'])
-    return clusterer
+    return process_output(clusterer)
 
+
+def process_output(clusterer):
+    labels = clusterer.clusterer.labels_
+    output = {}
+    for label in numpy.unique(labels):
+        signatures = clusterer.X[labels == label]
+        author_id_by_cluster = set()
+        for sig in signatures:
+            author_id_by_cluster.add(sig[0]['author_id'])
+        for sig in signatures:
+            output[(
+                sig[0].publication['publication_id'],
+                sig[0]['signature_uuid']
+            )] = [(
+                author_id,
+                True if sig[0]['author_id'] else False
+            ) for author_id in author_id_by_cluster if author_id]
+    return output

@@ -24,12 +24,11 @@
 
 from __future__ import absolute_import, division, print_function
 
-
-DISAMBIGUATION_SAMPLED_PAIRS_SIZE = 12 * 100
 ES_HOSTNAME = 'localhost:9200'
 ES_MAX_QUERY_SIZE = 999
 DISAMBIGUATION_ETHNICITY_MODEL_PATH = "/home/pazembrz/dev/clustering/ethnicity_estimator.pickle"
 DISAMBIGUATION_DISTANCE_MODEL_PATH = "/home/pazembrz/dev/clustering/linkage.dat"
+DISAMBIGUATION_SAMPLED_PAIRS_SIZE = 12 * 20
 """The number of signature pairs we use during training.
 
 Since INSPIRE has ~3M curated signatures it would take too much time

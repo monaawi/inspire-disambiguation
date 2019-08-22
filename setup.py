@@ -51,9 +51,7 @@ setup(
     long_description=readme,
     setup_requires=setup_requires,
     entry_points={
-        "console_scripts": ["inspire-disambiguation = inspire_disambiguation:cli"],
-        "invenio_config.module": ["inspire_disambiguation = inspire_disambiguation.config"],
-        "invenio_base.apps": ["inspire_disambiguation = inspire_disambiguation:InspireDisambiguation"],
+        "console_scripts": ["inspire-disambiguation = inspire_disambiguation.cli:cli"],
 
     },
     classifiers=[

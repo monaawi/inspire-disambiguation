@@ -23,9 +23,6 @@
 """Disambiguation module."""
 
 from __future__ import absolute_import, division, print_function
-
 from .app import BeardConfig  # noqa: F401
-
 conf = BeardConfig()
 
-# cli = create_cli(create_app=create_app)
