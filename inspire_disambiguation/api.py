@@ -67,20 +67,22 @@ def train_and_save_distance_model(
     distance_estimator.save_model(save_distance_model_path)
 
 
-def cluster(signatures, input_clusters):
+def cluster(ethnicity_model_path, distance_model_path, n_jobs, signature_block=None):
     """Train the clustering model and get output."""
+    signatures = get_signatures(signature_block=signature_block)
+    input_clusters = get_input_clusters(signatures)
     ethnicity_estimator = EthnicityEstimator()
-    ethnicity_estimator.load_model(conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'])
+    ethnicity_estimator.load_model(ethnicity_model_path)
 
     distance_estimator = DistanceEstimator(ethnicity_estimator)
-    distance_estimator.load_model(conf['DISAMBIGUATION_DISTANCE_MODEL_PATH'])
+    distance_estimator.load_model(distance_model_path)
 
     clusterer = Clusterer(distance_estimator)
     clusterer.load_data(
         signatures,
         input_clusters,
     )
-    clusterer.fit(n_jobs=conf['DISAMBIGUATION_CLUSTERING_N_JOBS'])
+    clusterer.fit(n_jobs=n_jobs)
     return process_output(clusterer)
 
 
