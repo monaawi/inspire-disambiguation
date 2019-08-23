@@ -28,6 +28,8 @@ import random
 
 from collections import defaultdict
 
+from click import progressbar
+
 from inspire_disambiguation import conf
 
 
@@ -110,7 +112,12 @@ def sample_signature_pairs(curated_signatures, clusters, pairs_size=None):
     }
 
     iterations = 0
+    pb = None
+    if conf['DISAMBIGUATION_DISPLAY_PROGRESS']:
+        pb = progressbar(length=pairs_size, label=f"Building {pairs_size} pairs of signatures")
     while any(count < pairs_size // 4 for count in counts.values()) and iterations < max_iterations:
+        if pb:
+            pb.render_progress()
         iterations += 1
         block, s1 = random.choice(blocks_and_uuids)
         s2 = random.choice(blocks[block])
@@ -119,8 +126,11 @@ def sample_signature_pairs(curated_signatures, clusters, pairs_size=None):
         kind = (same_cluster(s1, s2), same_name(s1, s2))
         if counts[kind] < pairs_size // 4:
             counts[kind] += 1
+            if pb:
+                pb.make_step(n_steps=1)
             yield {'same_cluster': kind[0], 'signature_uuids': [s1, s2]}
-
+    if pb:
+        pb.render_finish()
     if iterations == max_iterations:
         raise IncompleteSamplingError(
             'Could not generate {} samples, only managed to generate {} in reasonable time.'

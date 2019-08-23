@@ -24,7 +24,12 @@
 
 from __future__ import absolute_import, division, print_function
 
+import logging
+import pprint
+
 import numpy
+from redis import StrictRedis
+
 from inspire_disambiguation import conf
 from inspire_disambiguation.core.es.readers import get_signatures, get_input_clusters
 from inspire_disambiguation.core.ml.sampling import sample_signature_pairs
@@ -34,11 +39,14 @@ from .core.ml.models import (
     EthnicityEstimator,
 )
 
+LOGGER = logging.getLogger(__file__)
+
 
 def train_and_save_ethnicity_model(load_data_path, save_model_path):
     """Train the ethnicity estimator model and save it to disk."""
     estimator = EthnicityEstimator()
     estimator.load_data(load_data_path)
+    LOGGER.info("Training EthnicityEstimator. May take a while...")
     estimator.fit()
     estimator.save_model(save_model_path)
 
@@ -49,8 +57,10 @@ def train_and_save_distance_model(
     sampled_pairs_size,
 ):
     """Train the distance estimator model and save it to disk."""
-    curated_signatures = get_signatures(curated_only=True)
+    LOGGER.info("Pulling training data from ES")
+    curated_signatures = get_signatures(only_curated=True)
     input_clusters = get_input_clusters(curated_signatures)
+    LOGGER.info("Preparing %s pairs from sampled data for training.", sampled_pairs_size)
     pairs = [pair for pair in sample_signature_pairs(
         curated_signatures, input_clusters, sampled_pairs_size
     )]
@@ -63,14 +73,17 @@ def train_and_save_distance_model(
         pairs,
         sampled_pairs_size
     )
+    LOGGER.info("Training DistanceEstimator...")
     distance_estimator.fit()
     distance_estimator.save_model(save_distance_model_path)
 
 
 def cluster(ethnicity_model_path, distance_model_path, n_jobs, signature_block=None):
     """Train the clustering model and get output."""
+    LOGGER.info("Pulling requested signatures and input_clusters ('%s') form ES", signature_block)
     signatures = get_signatures(signature_block=signature_block)
     input_clusters = get_input_clusters(signatures)
+    LOGGER.debug("Got %s signature_blocks and %s input_clusters", len(signatures), len(input_clusters))
     ethnicity_estimator = EthnicityEstimator()
     ethnicity_estimator.load_model(ethnicity_model_path)
 
@@ -82,11 +95,25 @@ def cluster(ethnicity_model_path, distance_model_path, n_jobs, signature_block=N
         signatures,
         input_clusters,
     )
+    LOGGER.info("Processing data...")
     clusterer.fit(n_jobs=n_jobs)
     return process_output(clusterer)
 
 
 def process_output(clusterer):
+    """Process output of `Clusterer.fit` function to meet requirements of inspire.
+    Args:
+        clusterer (Clusterer): Clusterer object with all data processed by fit function.
+
+    Returns:
+        list: list with dicts
+        Examples:
+            [
+              {(publication_id, signature_uuid): [(author_id, bool), ...]},
+              ...,
+            ]
+
+    """
     labels = clusterer.clusterer.labels_
     output = {}
     for label in numpy.unique(labels):
@@ -103,3 +130,20 @@ def process_output(clusterer):
                 True if sig[0]['author_id'] else False
             ) for author_id in author_id_by_cluster if author_id]
     return output
+
+
+def cluster_from_redis(ethnicity_model_path, distance_model_path, n_jobs):
+    """Process all signature blocks from redis set (one by one)."""
+    redis_url = conf['REDIS_URL']
+    redis = StrictRedis.from_url(redis_url, decode_responses=True)
+    while True:
+        signature_block_data = redis.bzpopmin("author_phonetic_blocks", conf.get("REDIS_TIMEOUT", 60))
+        if not signature_block_data:
+            LOGGER.warn("No signature blocks in redis to process! STOP.")
+            break
+        signature_block = signature_block_data[1]
+        LOGGER.info("Processing '%s' signature_block", signature_block)
+        LOGGER.debug("%s", pprint.pformat(
+            cluster(ethnicity_model_path, distance_model_path, n_jobs, signature_block),
+            indent=4,
+        ))

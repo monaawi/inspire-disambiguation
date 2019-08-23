@@ -23,6 +23,18 @@
 """Disambiguation module."""
 
 from __future__ import absolute_import, division, print_function
+
+import logging
+import sys
+
 from .app import BeardConfig  # noqa: F401
 conf = BeardConfig()
 
+root = logging.getLogger()
+root.setLevel(getattr(logging, conf['DISAMBIGUATION_LOG_LEVEL']))
+
+handler = logging.StreamHandler(sys.stdout)
+handler.setLevel(getattr(logging, conf['DISAMBIGUATION_LOG_LEVEL']))
+formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+handler.setFormatter(formatter)
+root.addHandler(handler)

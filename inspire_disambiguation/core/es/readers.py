@@ -31,12 +31,12 @@ from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.connections import connections
 
 from inspire_disambiguation import conf
-from inspire_disambiguation.core.helpers import _build_signature
+from inspire_disambiguation.core.helpers import _build_signature, _get_author_id
 
 
 class LiteratureSearch(Search):
     connection = connections.create_connection(
-                hosts=[conf.get("ES_HOSTNAME", 'localhost:9200')],
+                hosts=[conf["ES_HOSTNAME"]],
                 timeout=conf.get("ES_TIMEOUT", 60)
             )
 
@@ -92,17 +92,26 @@ def get_signatures(signature_block=None, only_curated=False):
     for record in query.scan():
         record = record.to_dict()
         for author in record.get('authors'):
-            if only_curated and (
-                not author.get('curated_relation') or not author.get('author_id')
-            ):
+            if only_curated and not author.get('curated_relation'):
                 continue
             if signature_block and author.get('signature_block') != signature_block:
                 continue
-            results.append(_build_signature(author, record))
+            signature = _build_signature(author, record)
+            if only_curated and not signature.get('author_id', None):
+                continue
+            results.append(signature)
     return results
 
 
 def get_input_clusters(signatures):
+    """Process signatures and return input clusters.
+    Args:
+        signatures: iterable of signatures.
+
+    Returns:
+        list: list of all input clusters for provided signatures.
+
+    """
     input_clusters = []
     signatures_with_author = defaultdict(list)
     signatures_without_author = []
@@ -112,7 +121,7 @@ def get_input_clusters(signatures):
                 signature['signature_uuid'])
         else:
             signatures_without_author.append(signature['signature_uuid'])
-
+    cluster_id=0
     for cluster_id, (author_id, signature_uuids) in enumerate(six.iteritems(signatures_with_author)):
         input_clusters.append({
             'author_id': author_id,

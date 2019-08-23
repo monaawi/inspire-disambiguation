@@ -32,7 +32,6 @@ from . import config
 class BeardConfig(object):
     config_data = None
     instance_path = os.path.dirname(os.path.abspath(__file__))
-
     def __new__(cls):
         if cls.config_data is not None:
             return cls.config_data
@@ -63,6 +62,8 @@ class BeardConfig(object):
         cls.config_data['DISAMBIGUATION_CLUSTERING_MODEL_PATH'] = os.path.join(
             disambiguation_base_path, 'clustering.pkl')
         cls.config_data['DISAMBIGUATION_CLUSTERING_N_JOBS'] = 8
+        cls.config_data['DISAMBIGUATION_DISPLAY_PROGRESS'] = False
+        cls.config_data['DISAMBIGUATION_LOG_LEVEL'] = 'WARNING'
         for k in dir(config):
             if k.isupper() and not k.startswith('__'):
                 cls.config_data[k] = getattr(config, k)

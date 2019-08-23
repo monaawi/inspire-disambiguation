@@ -26,9 +26,13 @@ from __future__ import absolute_import, division, print_function
 
 ES_HOSTNAME = 'localhost:9200'
 ES_MAX_QUERY_SIZE = 999
+REDIS_URL = "redis://localhost:6379/0"
 DISAMBIGUATION_ETHNICITY_MODEL_PATH = "/home/pazembrz/dev/clustering/ethnicity_estimator.pickle"
 DISAMBIGUATION_DISTANCE_MODEL_PATH = "/home/pazembrz/dev/clustering/linkage.dat"
-DISAMBIGUATION_SAMPLED_PAIRS_SIZE = 12 * 20
+DISAMBIGUATION_SAMPLED_PAIRS_SIZE = 12 * 50000
+DISAMBIGUATION_DISPLAY_PROGRESS = True
+DISAMBIGUATION_LOG_LEVEL = 'DEBUG'
+
 """The number of signature pairs we use during training.
 
 Since INSPIRE has ~3M curated signatures it would take too much time

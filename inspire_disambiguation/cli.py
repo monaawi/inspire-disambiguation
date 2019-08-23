@@ -24,11 +24,13 @@ import click
 from inspire_disambiguation import conf
 from inspire_disambiguation.api import (
     train_and_save_ethnicity_model,
-    train_and_save_distance_model
+    train_and_save_distance_model,
+    cluster_from_redis
 )
 @click.group()
 def cli():
     pass
+
 
 @cli.group()
 def train():
@@ -43,31 +45,32 @@ def train():
     default=conf['DISAMBIGUATION_ETHNICITY_DATA_PATH'],
     help="Path to ethnicity csv file."
 )
-@click.option('-s', '--save', 'save_model_path', default=conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'], help="Path for saving ethnicity model.", type="str")
+@click.option('-s', '--save', 'save_model_path', default=conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'], help="Path for saving ethnicity model.", type=str)
 def ethnicity_model(load_data_path, save_model_path):
-    click.secho("Starting ETHNICITY training.", fg='green', blink=True, bold=True)
+    click.secho("Starting ETHNICITY training.")
     click.secho("This will take a while.")
     train_and_save_ethnicity_model(load_data_path, save_model_path)
-    click.secho(f"Done. Model saved in {save_model_path}")
+    click.secho(f"Done. Model saved in {save_model_path}", fg='green')
 
 
 @train.command()
-@click.option('-l', '--load', 'ethnicity_model_path', default=conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'], help="Path to ethnicity model obtained after training on ethnicity data.", type="str")
-@click.option('-s', '--save', 'save_model_path', default=conf['DISAMBIGUATION_DISTANCE_MODEL_PATH'], help="Path for saving distance model.", type="str")
-@click.option('-p', '--pairs_size', 'sampled_pairs_size', default=conf['DISAMBIGUATION_SAMPLED_PAIRS_SIZE'], help="Size of sampled pairs. Has to be multiple of 12.", type="str")
+@click.option('-e', '--ethnicity', 'ethnicity_model_path', default=conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'], help="Path to ethnicity model obtained after training on ethnicity data.", type=str)
+@click.option('-s', '--save', 'save_model_path', default=conf['DISAMBIGUATION_DISTANCE_MODEL_PATH'], help="Path for saving distance model.", type=str)
+@click.option('-p', '--pairs_size', 'sampled_pairs_size', default=conf['DISAMBIGUATION_SAMPLED_PAIRS_SIZE'], help="Size of sampled pairs. Has to be multiple of 12.", type=int)
 def distance_model(ethnicity_model_path, save_model_path, sampled_pairs_size):
-    click.secho("Starting Distance training.", fg='green', blink=True, bold=True)
+    click.secho("Starting Distance training.")
     train_and_save_distance_model(ethnicity_model_path, save_model_path, sampled_pairs_size)
-    click.secho(f"Done. Model saved in {save_model_path}")
+    click.secho(f"Done. Model saved in {save_model_path}", fg='green')
 
 
 # This needs to change to read from redis and cluster
 @cli.command()
-@click.option('-e', '--ethnicity', 'ethnicity_model_path', default=conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'], help="Path to ethnicity model obtained after training on ethnicity data.", type="str")
-@click.option('-d', '--distance', 'distance_model_path', default=conf['DISAMBIGUATION_DISTANCE_MODEL_PATH'], help="Path to distance model.", type="str")
-@click.option('-j', '--n_jobs', 'n_jobs', default=conf['DISAMBIGUATION_CLUSTERING_N_JOBS'], help="Number of processes to use", type="str")
-@click.option('-s', '--signature-block', prompt=True, help="Signature block to be clustered", type="str")
-def cluster(ethnicity_model_path,distance_model_path, signature_block, n_jobs):
-    click.secho(f"Starting Clustering signature block {signature_block}", fg='green')
-    clustering_result = cluster(ethnicity_model_path,distance_model_path, n_jobs,signature_block)
-    click.secho(f"Done. Results: {clustering_result}")
+@click.option('-e', '--ethnicity', 'ethnicity_model_path', default=conf['DISAMBIGUATION_ETHNICITY_MODEL_PATH'], help="Path to ethnicity model obtained after training on ethnicity data.", type=str)
+@click.option('-d', '--distance', 'distance_model_path', default=conf['DISAMBIGUATION_DISTANCE_MODEL_PATH'], help="Path to distance model.", type=str)
+@click.option('-j', '--n_jobs', 'n_jobs', default=conf['DISAMBIGUATION_CLUSTERING_N_JOBS'], help="Number of processes to use", type=int)
+def cluster(ethnicity_model_path, distance_model_path, n_jobs):
+    click.secho(f"Starting clustering.")
+    cluster_from_redis(ethnicity_model_path, distance_model_path, n_jobs)
+    click.secho(f"Done.",  fg='green')
+
+
