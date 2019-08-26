@@ -31,7 +31,7 @@ from elasticsearch_dsl import Q, Search
 from elasticsearch_dsl.connections import connections
 
 from inspire_disambiguation import conf
-from inspire_disambiguation.core.helpers import _build_signature, _get_author_id
+from inspire_disambiguation.core.helpers import _build_signature
 
 
 class LiteratureSearch(Search):
