@@ -23,6 +23,7 @@
       "title": "Title"
     }
   ],
+  "collaborations": [{"value":  "ATLAS"}],
   "authors": [
     {
       "full_name": "Doe, John",

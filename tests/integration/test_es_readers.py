@@ -59,8 +59,7 @@ def test_get_signatures_for_all(scan_mock, es_record_with_2_curated_authors, es_
                                           topics=['Theory-HEP']), signature_block='SABARGn',
                   signature_uuid='94fc2b0a-dc17-42c2-bae3-ca0024079e51')
     ]
-    assert sorted(expected_signatures, key=itemgetter('signature_uuid')) == sorted(signatures,
-                                                                                   key=itemgetter('signature_uuid'))
+    assert sorted(signatures,key=itemgetter('signature_uuid')) == sorted(expected_signatures, key=itemgetter('signature_uuid'))
 
 
 @patch("inspire_disambiguation.core.es.readers.LiteratureSearch.scan")
@@ -78,8 +77,7 @@ def test_get_signatures_for_signature_block(scan_mock, es_record_with_2_curated_
                   signature_uuid='94fc2b0a-dc17-42c2-bae3-ca0024079e55')
     ]
 
-    assert sorted(expected_signatures, key=itemgetter('signature_uuid')) == sorted(signatures,
-                                                                                   key=itemgetter('signature_uuid'))
+    assert sorted(signatures,key=itemgetter('signature_uuid')) == sorted(expected_signatures, key=itemgetter('signature_uuid'))
 
 
 @patch("inspire_disambiguation.core.es.readers.LiteratureSearch.scan")
@@ -96,8 +94,7 @@ def test_get_signatures_for_signature_block_only_curated(scan_mock, es_record_wi
                   signature_block='SABARGn', signature_uuid='94fc2b0a-dc17-42c2-bae3-ca0024079e52')
     ]
 
-    assert sorted(expected_signatures, key=itemgetter('signature_uuid')) == sorted(signatures,
-                                                                                   key=itemgetter('signature_uuid'))
+    assert sorted(signatures,key=itemgetter('signature_uuid')) == sorted(expected_signatures, key=itemgetter('signature_uuid'))
 
 
 @patch("inspire_disambiguation.core.es.readers.LiteratureSearch.scan")
@@ -125,8 +122,7 @@ def test_get_signatures_only_curated(scan_mock, es_record_with_2_curated_authors
                   signature_uuid='94fc2b0a-dc17-42c2-bae3-ca0024079e55')
     ]
 
-    assert sorted(expected_signatures, key=itemgetter('signature_uuid')) == sorted(signatures,
-                                                                                   key=itemgetter('signature_uuid'))
+    assert sorted(signatures,key=itemgetter('signature_uuid')) == sorted(expected_signatures, key=itemgetter('signature_uuid'))
 
 
 @patch("inspire_disambiguation.core.es.readers.LiteratureSearch.scan")
@@ -138,7 +134,7 @@ def test_get_input_clusters_for_signatures_with_same_author_id(scan_mock, es_rec
     expected_clusters = [{'author_id': 989440, 'cluster_id': 0,
                           'signature_uuids': ['94fc2b0a-dc17-42c2-bae3-ca0024079e52',
                                               '94fc2b0a-dc17-42c2-bae3-ca0024079e55']}]
-    assert expected_clusters == clusters
+    assert clusters == expected_clusters
 
 
 @patch("inspire_disambiguation.core.es.readers.LiteratureSearch.scan")
@@ -155,7 +151,7 @@ def test_get_input_clusters_for_signatures_with_different_author_id(scan_mock, e
         {'author_id': 989441, 'cluster_id': 1,
          'signature_uuids': ['94fc2b0a-dc17-42c2-bae3-ca0024079e52']}
     ]
-    assert expected_clusters == clusters
+    assert clusters == expected_clusters
 
 
 @patch("inspire_disambiguation.core.es.readers.LiteratureSearch.scan")
@@ -170,4 +166,4 @@ def test_get_input_clusters_for_non_curated_and_curated_signatures(scan_mock, es
         {'author_id': None, 'cluster_id': 1, 'signature_uuids': ['94fc2b0a-dc17-42c2-bae3-ca0024079e51']}
     ]
 
-    assert expected_clusters == clusters
+    assert clusters == expected_clusters

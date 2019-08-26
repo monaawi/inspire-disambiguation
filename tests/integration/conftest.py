@@ -23,6 +23,20 @@
 import pytest
 import json
 
+from redis.client import StrictRedis
+
+from inspire_disambiguation import conf
+from inspire_disambiguation.api import train_and_save_ethnicity_model
+
+ETHNICITY_TRAINING_DATA = '''\
+RACE,NAMELAST,NAMEFRST
+1,Doe,John
+2,Lee,Stan
+3,Abdullah,FOO
+4,Montana,Hannah
+5,Doe,Jane
+'''
+
 
 class FakeHit(dict):
     def to_dict(self):
@@ -37,23 +51,33 @@ def load_es_record(filename):
 
 @pytest.fixture(scope="function")
 def es_record_with_2_curated_authors():
-    record = load_es_record("374836")
-    return record
+    return load_es_record("374836")
 
 
 @pytest.fixture(scope="function")
 def es_record_with_curated_author():
-    record = load_es_record("374837")
-    return record
+    return load_es_record("374837")
 
 
 @pytest.fixture(scope="function")
 def es_record_with_curated_author_and_no_recid():
-    record = load_es_record("406190")
-    return record
+    return load_es_record("406190")
 
 
 @pytest.fixture(scope="function")
 def es_record_with_non_curated_author():
-    record = load_es_record("421404")
-    return record
+    return load_es_record("421404")
+
+
+@pytest.fixture(scope="function")
+def es_record_with_many_curated_authors():
+    return load_es_record("1")
+
+
+@pytest.fixture(scope="function")
+def ethnicity_path(tmpdir):
+    ethnicity_data_path = tmpdir.join('ethnicity.csv')
+    ethnicity_data_path.write(ETHNICITY_TRAINING_DATA)
+    ethnicity_model_path = tmpdir.join('ethnicity.pkl')
+    train_and_save_ethnicity_model(ethnicity_data_path, ethnicity_model_path)
+    return ethnicity_model_path
