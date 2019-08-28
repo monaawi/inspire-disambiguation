@@ -43,6 +43,7 @@ def curated_signature():
         ),
         signature_block="SABARGn",
         signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+        is_curated_author_id=True
     )
     return signature
 
@@ -64,17 +65,39 @@ def non_curated_signature():
         ),
         signature_block="WANBARGs",
         signature_uuid="5e550ded-e955-4a22-b906-8af5aaa9f1e2",
+        is_curated_author_id=False,
     )
     return signature
 
 
 @pytest.fixture(scope="function")
-def author():
+def curated_author():
     return {
         "full_name": "Doe, John",
         "curated_relation": True,
         "record": {"$ref": "http://labs.inspirehep.net/api/authors/989441"},
         "affiliations": [{"value": "Rutgers U., Piscataway"}],
+        "signature_block": "JOhn",
+        "uuid": "94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+    }
+
+
+@pytest.fixture(scope="function")
+def non_curated_author():
+    return {
+        "full_name": "Doe, John",
+        "affiliations": [{"value": "Rutgers U., Piscataway"}],
+        "signature_block": "JOhn",
+        "uuid": "94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+    }
+
+
+@pytest.fixture(scope="function")
+def non_curated_author_with_recid():
+    return {
+        "full_name": "Doe, John",
+        "affiliations": [{"value": "Rutgers U., Piscataway"}],
+        "record": {"$ref": "http://labs.inspirehep.net/api/authors/989441"},
         "signature_block": "JOhn",
         "uuid": "94fc2b0a-dc17-42c2-bae3-ca0024079e52",
     }

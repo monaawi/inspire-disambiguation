@@ -28,14 +28,14 @@ from inspire_disambiguation.core.helpers import (
 from inspire_disambiguation.core.ml.models import Signature, Publication
 
 
-def test_get_author_affiliation(author):
-    result = _get_author_affiliation(author)
+def test_get_author_affiliation(curated_author):
+    result = _get_author_affiliation(curated_author)
     expected_result = "Rutgers U., Piscataway"
     assert result == expected_result
 
 
-def test_get_author_id(author):
-    result = _get_author_id(author)
+def test_get_author_id(curated_author):
+    result = _get_author_id(curated_author)
     expected_result = 989441
     assert result == expected_result
 
@@ -88,8 +88,8 @@ def test_build_publication(record):
     assert result == expected_result
 
 
-def test_build_signature(author, record):
-    result = Signature.build(author, record)
+def test_build_signature_with_curated_author(curated_author, record):
+    result = Signature.build(curated_author, record)
     expected_result = Signature(
         author_affiliation="Rutgers U., Piscataway",
         author_id=989441,
@@ -105,5 +105,51 @@ def test_build_signature(author, record):
         ),
         signature_block="JOhn",
         signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+        is_curated_author_id=True,
+    )
+    assert result == expected_result
+
+
+def test_build_signature_with_non_curated_author(non_curated_author, record):
+    result = Signature.build(non_curated_author, record)
+    expected_result = Signature(
+        author_affiliation="Rutgers U., Piscataway",
+        author_id=None,
+        author_name="Doe, John",
+        publication=Publication(
+            abstract="2 curated authors with recid",
+            authors=["Doe, John"],
+            collaborations=["ATLAS"],
+            keywords=["effective action", "approximation: semiclassical"],
+            publication_id=374836,
+            title="Title",
+            topics=["Theory-HEP"],
+        ),
+        signature_block="JOhn",
+        signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+        is_curated_author_id=False,
+    )
+    assert result == expected_result
+
+
+def test_build_signature_with_non_curated_author_with_recid(non_curated_author_with_recid,
+                                                            record):
+    result = Signature.build(non_curated_author_with_recid, record)
+    expected_result = Signature(
+        author_affiliation="Rutgers U., Piscataway",
+        author_id=989441,
+        author_name="Doe, John",
+        publication=Publication(
+            abstract="2 curated authors with recid",
+            authors=["Doe, John"],
+            collaborations=["ATLAS"],
+            keywords=["effective action", "approximation: semiclassical"],
+            publication_id=374836,
+            title="Title",
+            topics=["Theory-HEP"],
+        ),
+        signature_block="JOhn",
+        signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+        is_curated_author_id=False,
     )
     assert result == expected_result

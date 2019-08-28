@@ -80,6 +80,7 @@ def test_process_clustering_output_signatures_without_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=False
                 )
             ],
             [
@@ -107,6 +108,7 @@ def test_process_clustering_output_signatures_without_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e54",
+                    is_curated_author_id=False
                 )
             ],
         ],
@@ -122,7 +124,7 @@ def test_process_clustering_output_signatures_without_author_id():
     assert output == expected_output
 
 
-def test_process_clustering_output_signatures_multiple_author_id():
+def test_process_clustering_output_signatures_multiple_curated_author_ids():
     clusterer_mock = MagicMock()
     clusterer_mock.clusterer.labels_ = numpy.array([0, 0, 1, 1, 1])
     clusterer_mock.X = numpy.array(
@@ -152,6 +154,7 @@ def test_process_clustering_output_signatures_multiple_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=True
                 )
             ],
             [
@@ -179,6 +182,7 @@ def test_process_clustering_output_signatures_multiple_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e53",
+                    is_curated_author_id=False
                 )
             ],
             [
@@ -206,6 +210,7 @@ def test_process_clustering_output_signatures_multiple_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e54",
+                    is_curated_author_id=True
                 )
             ],
             [
@@ -233,6 +238,7 @@ def test_process_clustering_output_signatures_multiple_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e55",
+                    is_curated_author_id=False
                 )
             ],
             [
@@ -260,6 +266,7 @@ def test_process_clustering_output_signatures_multiple_author_id():
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e56",
+                    is_curated_author_id=True
                 )
             ],
         ],
@@ -268,10 +275,184 @@ def test_process_clustering_output_signatures_multiple_author_id():
 
     expected_output = {
         (11, "94fc2b0a-dc17-42c2-bae3-ca0024079e52"): [(1, True)],
-        (12, "94fc2b0a-dc17-42c2-bae3-ca0024079e53"): [(1, False)],
+        (12, "94fc2b0a-dc17-42c2-bae3-ca0024079e53"): [(1, True)],
         (13, "94fc2b0a-dc17-42c2-bae3-ca0024079e54"): [(3, True), (5, True)],
-        (14, "94fc2b0a-dc17-42c2-bae3-ca0024079e55"): [(3, False), (5, False)],
+        (14, "94fc2b0a-dc17-42c2-bae3-ca0024079e55"): [(3, True), (5, True)],
         (15, "94fc2b0a-dc17-42c2-bae3-ca0024079e56"): [(3, True), (5, True)],
+    }
+    output = process_clustering_output(clusterer_mock)
+    assert not DeepDiff(output, expected_output, ignore_order=True)
+
+
+def test_process_clustering_output_signatures_with_non_curated_author_id():
+    clusterer_mock = MagicMock()
+    clusterer_mock.clusterer.labels_ = numpy.array([0, 0, ])
+    clusterer_mock.X = numpy.array(
+        [
+            [
+                Signature(
+                    author_affiliation="Rutgers U., Piscataway",
+                    author_id=1,
+                    author_name="Doe, John",
+                    publication=Publication(
+                        abstract="Many curated authors",
+                        authors=[
+                            "Doe, John",
+                            "Doe, J",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Jamie",
+                            "Jamie",
+                        ],
+                        collaborations=[],
+                        keywords=["keyword"],
+                        publication_id=11,
+                        title="Title",
+                        topics=["category"],
+                    ),
+                    signature_block="JOhn",
+                    signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=False
+                )
+            ],
+            [
+                Signature(
+                    author_affiliation="Rutgers U., Piscataway",
+                    author_id=None,
+                    author_name="Doe, John",
+                    publication=Publication(
+                        abstract="Many curated authors",
+                        authors=[
+                            "Doe, John",
+                            "Doe, J",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Jamie",
+                            "Jamie",
+                        ],
+                        collaborations=[],
+                        keywords=["keyword"],
+                        publication_id=12,
+                        title="Title",
+                        topics=["category"],
+                    ),
+                    signature_block="JOhn",
+                    signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e53",
+                    is_curated_author_id=False
+                )
+            ],
+        ],
+        dtype=object,
+    )
+
+    expected_output = {
+        (11, "94fc2b0a-dc17-42c2-bae3-ca0024079e52"): [(1, False)],
+        (12, "94fc2b0a-dc17-42c2-bae3-ca0024079e53"): [(1, False)],
+    }
+    output = process_clustering_output(clusterer_mock)
+    assert not DeepDiff(output, expected_output, ignore_order=True)
+
+
+def test_process_clustering_output_signatures_with_curated_and_non_curated_author_id():
+    clusterer_mock = MagicMock()
+    clusterer_mock.clusterer.labels_ = numpy.array([0, 0, 0])
+    clusterer_mock.X = numpy.array(
+        [
+            [
+                Signature(
+                    author_affiliation="Rutgers U., Piscataway",
+                    author_id=1,
+                    author_name="Doe, John",
+                    publication=Publication(
+                        abstract="Many curated authors",
+                        authors=[
+                            "Doe, John",
+                            "Doe, J",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Jamie",
+                            "Jamie",
+                        ],
+                        collaborations=[],
+                        keywords=["keyword"],
+                        publication_id=11,
+                        title="Title",
+                        topics=["category"],
+                    ),
+                    signature_block="JOhn",
+                    signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=False
+                )
+            ],
+            [
+                Signature(
+                    author_affiliation="Rutgers U., Piscataway",
+                    author_id=None,
+                    author_name="Doe, John",
+                    publication=Publication(
+                        abstract="Many curated authors",
+                        authors=[
+                            "Doe, John",
+                            "Doe, J",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Jamie",
+                            "Jamie",
+                        ],
+                        collaborations=[],
+                        keywords=["keyword"],
+                        publication_id=12,
+                        title="Title",
+                        topics=["category"],
+                    ),
+                    signature_block="JOhn",
+                    signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e53",
+                    is_curated_author_id=False
+                )
+            ],
+            [
+                Signature(
+                    author_affiliation="Rutgers U., Piscataway",
+                    author_id=1,
+                    author_name="Doe, John",
+                    publication=Publication(
+                        abstract="Many curated authors",
+                        authors=[
+                            "Doe, John",
+                            "Doe, J",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Doe, John",
+                            "Jamie",
+                            "Jamie",
+                        ],
+                        collaborations=[],
+                        keywords=["keyword"],
+                        publication_id=12,
+                        title="Title",
+                        topics=["category"],
+                    ),
+                    signature_block="JOhn",
+                    signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e53",
+                    is_curated_author_id=True
+                )
+            ],
+        ],
+        dtype=object,
+    )
+
+    expected_output = {
+        (11, "94fc2b0a-dc17-42c2-bae3-ca0024079e52"): [(1, True)],
+        (12, "94fc2b0a-dc17-42c2-bae3-ca0024079e53"): [(1, True)],
     }
     output = process_clustering_output(clusterer_mock)
     assert not DeepDiff(output, expected_output, ignore_order=True)

@@ -673,15 +673,16 @@ class Signature(object):
             Signature: Object built from provided data
 
         """
+        author_id = _get_author_id(author)
         return cls(
             **{
                 "author_affiliation": _get_author_affiliation(author),
-                "author_id": _get_author_id(author),
+                "author_id": author_id,
                 "author_name": author["full_name"],
                 "publication": Publication.build(record),
                 "signature_block": author.get("signature_block"),
                 "signature_uuid": author["uuid"],
-                "is_curated_author_id": bool(author.get('curated_relation'))
+                "is_curated_author_id": True if author_id is not None and author.get("curated_relation") else False
             }
         )
 

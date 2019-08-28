@@ -94,6 +94,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=True,
                 ),
                 Signature(
                     author_affiliation="Rutgers U., Piscataway",
@@ -119,6 +120,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e53",
+                    is_curated_author_id=True
                 ),
             ],
             [
@@ -146,6 +148,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e54",
+                    is_curated_author_id=True
                 ),
                 Signature(
                     author_affiliation="Rutgers U., Piscataway",
@@ -171,6 +174,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e55",
+                    is_curated_author_id=True
                 ),
             ],
             [
@@ -198,6 +202,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e56",
+                    is_curated_author_id=True
                 ),
                 Signature(
                     author_affiliation="Rutgers U., Piscataway",
@@ -223,6 +228,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="Jana",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e57",
+                    is_curated_author_id=True
                 ),
             ],
             [
@@ -250,6 +256,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=True
                 ),
                 Signature(
                     author_affiliation="Rutgers U., Piscataway",
@@ -275,6 +282,7 @@ def test_distance_estimator_load_data(scan_mock, es_record_with_many_curated_aut
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e54",
+                    is_curated_author_id=True
                 ),
             ],
         ],
@@ -318,12 +326,13 @@ def test_clusterer_load_data(
                     ),
                     signature_block="JOhn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+                    is_curated_author_id=True
                 )
             ],
             [
                 Signature(
                     author_affiliation="Rutgers U., Piscataway",
-                    author_id=None,
+                    author_id=989443,
                     author_name="Seiberg, Nana.",
                     publication=Publication(
                         abstract="Author curated no recid",
@@ -336,12 +345,13 @@ def test_clusterer_load_data(
                     ),
                     signature_block="SABARGn",
                     signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e51",
+                    is_curated_author_id=False,
                 )
             ],
         ],
         dtype=object,
     )
 
-    expected_y = array([0, 1])
+    expected_y = array([0, -1])
     assert (clusterer.X == expected_X).all()
     assert (clusterer.y == expected_y).all()

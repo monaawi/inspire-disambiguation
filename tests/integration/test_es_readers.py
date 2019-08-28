@@ -58,6 +58,7 @@ def test_get_signatures_for_all(
             ),
             signature_block="SABARGn",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+            is_curated_author_id=True
         ),
         Signature(
             author_affiliation="UAIC",
@@ -74,6 +75,7 @@ def test_get_signatures_for_all(
             ),
             signature_block="JANa",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e55",
+            is_curated_author_id=True,
         ),
         Signature(
             author_affiliation="Texas U.",
@@ -90,10 +92,11 @@ def test_get_signatures_for_all(
             ),
             signature_block="WANBARGs",
             signature_uuid="5e550ded-e955-4a22-b906-8af5aaa9f1e2",
+            is_curated_author_id=False
         ),
         Signature(
             author_affiliation="Rutgers U., Piscataway",
-            author_id=None,
+            author_id=989443,
             author_name="Seiberg, Nana.",
             publication=Publication(
                 abstract="Author curated no recid",
@@ -106,6 +109,7 @@ def test_get_signatures_for_all(
             ),
             signature_block="SABARGn",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e51",
+            is_curated_author_id=False
         ),
     ]
     assert sorted(signatures, key=itemgetter("signature_uuid")) == sorted(
@@ -135,6 +139,7 @@ def test_get_signatures_for_signature_block(
             ),
             signature_block="JANa",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e55",
+            is_curated_author_id=True
         )
     ]
 
@@ -167,6 +172,7 @@ def test_get_signatures_for_signature_block_only_curated(
             ),
             signature_block="SABARGn",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+            is_curated_author_id=True
         )
     ]
 
@@ -206,6 +212,7 @@ def test_get_signatures_only_curated(
             ),
             signature_block="SABARGn",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e52",
+            is_curated_author_id=True
         ),
         Signature(
             author_affiliation="UAIC",
@@ -222,6 +229,7 @@ def test_get_signatures_only_curated(
             ),
             signature_block="JANa",
             signature_uuid="94fc2b0a-dc17-42c2-bae3-ca0024079e55",
+            is_curated_author_id=True
         ),
     ]
 
@@ -297,7 +305,7 @@ def test_get_input_clusters_for_non_curated_and_curated_signatures(
         },
         {
             "author_id": None,
-            "cluster_id": 1,
+            "cluster_id": -1,
             "signature_uuids": ["94fc2b0a-dc17-42c2-bae3-ca0024079e51"],
         },
     ]

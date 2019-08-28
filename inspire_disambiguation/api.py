@@ -136,18 +136,17 @@ def process_clustering_output(clusterer):
     output = {}
     for label in numpy.unique(labels):
         signatures = clusterer.X[labels == label]
-        author_id_by_cluster = {}
+        author_ids_and_is_curated = {}
         for sig in signatures:
             author_id = sig[0]['author_id']
             if sig[0]['is_curated_author_id']:
-                author_id_by_cluster[author_id] = True
-            elif author_id not in author_id_by_cluster:
-                author_id_by_cluster[author_id] = False
+                author_ids_and_is_curated[author_id] = True
+            elif author_id and author_id not in author_ids_and_is_curated:
+                author_ids_and_is_curated[author_id] = False
         for sig in signatures:
             output[(sig[0].publication["publication_id"], sig[0]["signature_uuid"])] = [
-                (author_id, author_id_by_cluster[sig[0]['author_id']],label)
-                for author_id in author_id_by_cluster
-                if author_id
+                (author_id, is_curated)
+                for author_id, is_curated in author_ids_and_is_curated.items()
             ]
     return output
 
