@@ -97,6 +97,7 @@ def cluster(ethnicity_model_path, distance_model_path, n_jobs, signature_block=N
         "Pulling requested signatures and input_clusters ('%s') form ES",
         signature_block,
     )
+
     signatures = get_signatures(signature_block=signature_block)
     input_clusters = get_input_clusters(signatures)
     LOGGER.debug(
@@ -112,6 +113,7 @@ def cluster(ethnicity_model_path, distance_model_path, n_jobs, signature_block=N
     clusterer.load_data(signatures, input_clusters)
     LOGGER.info("Starting clustering")
     clusterer.fit(n_jobs=n_jobs)
+
     return process_clustering_output(clusterer)
 
 
@@ -134,12 +136,16 @@ def process_clustering_output(clusterer):
     output = {}
     for label in numpy.unique(labels):
         signatures = clusterer.X[labels == label]
-        author_id_by_cluster = set()
+        author_id_by_cluster = {}
         for sig in signatures:
-            author_id_by_cluster.add(sig[0]["author_id"])
+            author_id = sig[0]['author_id']
+            if sig[0]['is_curated_author_id']:
+                author_id_by_cluster[author_id] = True
+            elif author_id not in author_id_by_cluster:
+                author_id_by_cluster[author_id] = False
         for sig in signatures:
             output[(sig[0].publication["publication_id"], sig[0]["signature_uuid"])] = [
-                (author_id, True if sig[0]["author_id"] else False)
+                (author_id, author_id_by_cluster[sig[0]['author_id']],label)
                 for author_id in author_id_by_cluster
                 if author_id
             ]

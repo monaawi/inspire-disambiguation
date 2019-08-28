@@ -153,13 +153,12 @@ def get_input_clusters(signatures):
     signatures_with_author = defaultdict(list)
     signatures_without_author = []
     for signature in signatures:
-        if signature.get("author_id"):
+        if signature.get("is_curated_author_id"):
             signatures_with_author[signature["author_id"]].append(
                 signature["signature_uuid"]
             )
         else:
             signatures_without_author.append(signature["signature_uuid"])
-    cluster_id = 0
     for cluster_id, (author_id, signature_uuids) in enumerate(
         six.iteritems(signatures_with_author)
     ):
@@ -170,14 +169,13 @@ def get_input_clusters(signatures):
                 "signature_uuids": signature_uuids,
             }
         )
-    for cluster_id, signature_uuid in enumerate(
-        signatures_without_author, cluster_id + 1
-    ):
+
+    if len(signatures_without_author) > 0:
         input_clusters.append(
             {
                 "author_id": None,
-                "cluster_id": cluster_id,
-                "signature_uuids": [signature_uuid],
+                "cluster_id": -1,
+                "signature_uuids": signatures_without_author,
             }
         )
     return input_clusters

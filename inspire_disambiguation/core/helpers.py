@@ -30,8 +30,7 @@ def _get_author_affiliation(author):
 
 
 def _get_author_id(author):
-    if author.get("curated_relation"):
-        return get_recid_from_ref(author.get("record"))
+    return get_recid_from_ref(author.get("record"))
 
 
 def get_recid_from_ref(ref_obj):

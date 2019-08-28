@@ -659,6 +659,7 @@ class Signature(object):
     publication = attr.ib()
     signature_block = attr.ib()
     signature_uuid = attr.ib()
+    is_curated_author_id = attr.ib()
 
     @classmethod
     def build(cls, author, record):
@@ -680,6 +681,7 @@ class Signature(object):
                 "publication": Publication.build(record),
                 "signature_block": author.get("signature_block"),
                 "signature_uuid": author["uuid"],
+                "is_curated_author_id": bool(author.get('curated_relation'))
             }
         )
 
